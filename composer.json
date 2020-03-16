@@ -1,7 +1,9 @@
 {
     "require": {
         "cboden/ratchet": "^0.4.2",
-        "monolog/monolog": "^2.0"
+        "monolog/monolog": "^2.0",
+        "guzzle/guzzle": "~3.7",
+        "react/zmq" : "*"
     },
     "autoload": {
         "psr-4": {
