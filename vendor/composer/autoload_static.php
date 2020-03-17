@@ -25,9 +25,11 @@ class ComposerStaticInit365dc4da6a3215967b08516f85638149
             'Symfony\\Component\\Routing\\' => 26,
             'Symfony\\Component\\Mime\\' => 23,
             'Symfony\\Component\\HttpFoundation\\' => 33,
+            'Symfony\\Component\\EventDispatcher\\' => 34,
         ),
         'R' => 
         array (
+            'React\\ZMQ\\' => 10,
             'React\\Stream\\' => 13,
             'React\\Socket\\' => 13,
             'React\\Promise\\Timer\\' => 20,
@@ -81,6 +83,14 @@ class ComposerStaticInit365dc4da6a3215967b08516f85638149
         'Symfony\\Component\\HttpFoundation\\' => 
         array (
             0 => __DIR__ . '/..' . '/symfony/http-foundation',
+        ),
+        'Symfony\\Component\\EventDispatcher\\' => 
+        array (
+            0 => __DIR__ . '/..' . '/symfony/event-dispatcher',
+        ),
+        'React\\ZMQ\\' => 
+        array (
+            0 => __DIR__ . '/..' . '/react/zmq/src',
         ),
         'React\\Stream\\' => 
         array (
@@ -141,6 +151,17 @@ class ComposerStaticInit365dc4da6a3215967b08516f85638149
     );
 
     public static $prefixesPsr0 = array (
+        'G' => 
+        array (
+            'Guzzle\\Tests' => 
+            array (
+                0 => __DIR__ . '/..' . '/guzzle/guzzle/tests',
+            ),
+            'Guzzle' => 
+            array (
+                0 => __DIR__ . '/..' . '/guzzle/guzzle/src',
+            ),
+        ),
         'E' => 
         array (
             'Evenement' => 

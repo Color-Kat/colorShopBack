@@ -7,7 +7,6 @@
 
         public function open($openable) {
             $conn = parent::conn();
-            $userId  = $_SESSION['userId'];//userId
 
             $goods = $conn->query("SELECT * FROM goods WHERE id = '$openable'");
             $goods = $goods->fetch_assoc();
@@ -41,15 +40,11 @@
             // get buyer name
             // $userName = $conn->query("SELECT name FROM users WHERE userId = '$userId'");
             // $userName = $userName->fetch_assoc();
-            
-            $goods['myId'] = $userId;
+            if (isset($_SESSION['userId'])) {
+                $userId = $_SESSION['userId'];//userId
+                $goods['myId'] = $userId;
+            }
 
-            // echo $sellerId;
-            // echo $userId;
-            // parent::console_log($sellerId);
-            // parent::console_log($userId);
-
-            
             echo json_encode($goods);
         }
     }

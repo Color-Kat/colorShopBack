@@ -13,7 +13,7 @@
             $sel = $conn->query("SELECT * FROM users WHERE mail = '$this->email'");
             $out = array();
             if($sel->num_rows > 0){
-                throw new Exception('Такой Email уже зарегистрирован');
+                throw new \Exception('Такой Email уже зарегистрирован');
             }else{
                 return true;
             }
@@ -22,7 +22,7 @@
             $conn = parent::conn();
             $sel = $conn->query("INSERT INTO users (`name`, `surname`, `mail`, `password`, `myOrders`, `liked`, `cart`, `location`, `chatID`) VALUES ('$this->name', '$this->surname', '$this->email', '$this->pass', '', '', '','','');");
             if($sel) return true;
-            else throw new Exception('Регистрация не выполнена');
+            else throw new \Exception('Регистрация не выполнена');
         }
     }
 ?>

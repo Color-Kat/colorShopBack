@@ -23,7 +23,6 @@
     //     include './classes/' . $class_name . '.php';
     // });
 
-
     // what to choose 
     if(isset($_POST['action'])) $action   = $_POST['action']; 
 
@@ -50,6 +49,7 @@
                 echo $action;
             }else{
                 $action = 'login';
+                var_dump($_SESSION);
                 echo $action;
             }
             break;
@@ -71,11 +71,12 @@
             }
             break;
         case 'login':
-            $emailLogin   = $_POST['email'];
-            $passLogin    = $_POST['epass'];
-            $doLogin      = new Login($emailLogin, $passLogin);
+            $emailLogin = $_POST['email'];
+            $passLogin  = $_POST['epass'];
+            $doLogin    = new Login();
             try {
-                $doLogin->login(); 
+                $doLogin->login($emailLogin, $passLogin);
+                var_dump($_SESSION);
                 // Если true
                 echo true;
             } catch (Exception $e) {
@@ -217,7 +218,6 @@
                 echo json_encode('login');
                 return false;  
             }
-
             $chat = new Chat();
             $chat->chatList();
             break;
