@@ -1,6 +1,7 @@
-<?php
-    session_start();//session
+<?php   
     cors();
+    // session_id('onin7ujkh3mnbktko5npb90uvmv8lpc2');
+    session_start();
     
     require "../vendor/autoload.php";
    
@@ -19,8 +20,8 @@
     use ColorCore\Registration;
 
     // auto load classes
-    // spl_autoload_register(function ($class_name) {
-    //     include './classes/' . $class_name . '.php';
+    // spl_autoload_register(function ($class) {
+    //     include 'classes/' . $class . '.php';
     // });
 
     // what to choose 
@@ -49,7 +50,6 @@
                 echo $action;
             }else{
                 $action = 'login';
-                var_dump($_SESSION);
                 echo $action;
             }
             break;
@@ -73,12 +73,12 @@
         case 'login':
             $emailLogin = $_POST['email'];
             $passLogin  = $_POST['epass'];
-            $doLogin    = new Login();
+            $doLogin    = new Login($emailLogin, $passLogin);
             try {
-                $doLogin->login($emailLogin, $passLogin);
+                $doLogin->login();
                 var_dump($_SESSION);
                 // Если true
-                echo true;
+                // echo session_id();   
             } catch (Exception $e) {
                 echo $e->getMessage();
             }
@@ -186,22 +186,19 @@
             $seller = $_POST['seller'];
             $id = $_POST['goodId'];
 
-            $chat = new Chat();
-
-            $chat->openChat($buyer, $seller, $id);
+            if (isset($_SESSION['authorization'])){
+                $chat = new Chat();
+                $chat->openChat($buyer, $seller, $id);
+            }else json_encode('login');
 
             break;
         case 'openChatById':
             $chatId = $_POST['chatId'];
 
-            $chat = new Chat();
-            $chat->issetChat($chatId);
-            break;
-        case 'openSocket':
-            $room  = 1;
-
-            $chat = new Chat();
-            $chat->openSocket($room);
+            if (isset($_SESSION['authorization'])){
+                $chat = new Chat();
+                $chat->issetChat($chatId);
+            }else json_encode('login');
             break;
         case 'sendMess':
             $chatId  = $_POST['chatId'];
@@ -221,6 +218,8 @@
             $chat = new Chat();
             $chat->chatList();
             break;
+
+        default: throw new \Exception('action not found');
     } 
 
     function cors() { 	

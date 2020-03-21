@@ -31,7 +31,7 @@ require 'W:\domains\colorShop\vendor\autoload.php';
 //     }
 
 //     public function onMessage(ConnectionInterface $from, $msg) {
-//         // $msg = json_encode($msg);
+//         $msg = json_encode($msg);
 
 //         $numRecv = count($this->clients) - 1;
 //         echo sprintf('Connection %d sending message "%s" to %d other connection%s' . "\n"
@@ -65,191 +65,141 @@ require 'W:\domains\colorShop\vendor\autoload.php';
 
 // -------------------------------------------------------
 
-
+use Ratchet\MessageComponentInterface;
 use Ratchet\ConnectionInterface;
-use Ratchet\Wamp\WampServerInterface;
 
-class ChatRoom implements WampServerInterface {
-    const CTRL_PREFIX = 'ctrl:';
-    const CTRL_ROOMS  = 'ctrl:rooms';
+/**
+ * @author Rohit Dhiman | @aimflaiims
+ */
+class ChatRoom implements MessageComponentInterface
+{
+    protected $clients;
+    private $subscriptions;
+    private $users;
+    private $userresources;
 
-    protected $rooms = array();
-
-    protected $roomLookup = array();
-
-    public function __construct() {
-        $this->rooms[static::CTRL_ROOMS] = new \SplObjectStorage;
+    public function __construct()
+    {
+        $this->clients = new \SplObjectStorage;
+        $this->subscriptions = [];
+        $this->users = [];
+        $this->userresources = [];
     }
 
     /**
-     * {@inheritdoc}
+     * [onOpen description]
+     * @method onOpen
+     * @param  ConnectionInterface $conn [description]
+     * @return [JSON]                    [description]
+     * @example connection               var conn = new WebSocket('ws://localhost:8090');
      */
-    public function onOpen(ConnectionInterface $conn) {
-        $conn->Chat        = new \StdClass;
-        $conn->Chat->rooms = array();
-        $conn->Chat->name  = $conn->WAMP->sessionId;
+    public function onOpen(ConnectionInterface $conn)
+    {
+        $this->clients->attach($conn);
+        $this->users[$conn->resourceId] = $conn;
+    }
 
-        if (isset($conn->WebSocket)) {
-            $conn->Chat->name = $this->escape($conn->WebSocket->request->getCookie('name'));
+    /**
+     * [onMessage description]
+     * @method onMessage
+     * @param  ConnectionInterface $conn [description]
+     * @param  [JSON.stringify]              $msg  [description]
+     * @return [JSON]                    [description]
+     * @example subscribe                conn.send(JSON.stringify({command: "subscribe", channel: "global"}));
+     * @example groupchat                conn.send(JSON.stringify({command: "groupchat", message: "hello glob", channel: "global"}));
+     * @example message                  conn.send(JSON.stringify({command: "message", to: "1", from: "9", message: "it needs xss protection"}));
+     * @example register                 conn.send(JSON.stringify({command: "register", userId: 9}));
+     */
+    public function onMessage(ConnectionInterface $conn, $msg)
+    {
+        echo $msg;
+        $data = json_decode($msg);
+        if (isset($data->command)) {
+            switch ($data->command) {
+                case "subscribe":
+                    $this->subscriptions[$conn->resourceId] = $data->channel;
+                break;
+                case "groupchat":
+                    //
+                    // $conn->send(json_encode($this->subscriptions));
+                    if (isset($this->subscriptions[$conn->resourceId])) {
+                        $target = $this->subscriptions[$conn->resourceId];
+                        foreach ($this->subscriptions as $id=>$channel) {
+                            if ($channel == $target && $id != $conn->resourceId) {
+                                $this->users[$id]->send($data->message);
+                            }
+                        }
+                    }
+                break;
+                case "message":
+                    //
+                    if ( isset($this->userresources[$data->to]) ) {
+                        foreach ($this->userresources[$data->to] as $key => $resourceId) {
+                            if ( isset($this->users[$resourceId]) ) {
+                                $this->users[$resourceId]->send($msg);
+                            }
+                        }
+                        $conn->send(json_encode($this->userresources[$data->to]));
+                    }
 
-            if (empty($conn->Chat->name)) {
-                $conn->Chat->name  = 'Anonymous ' . $conn->resourceId;
+                    if (isset($this->userresources[$data->from])) {
+                        foreach ($this->userresources[$data->from] as $key => $resourceId) {
+                            if ( isset($this->users[$resourceId])  && $conn->resourceId != $resourceId ) {
+                                $this->users[$resourceId]->send($msg);
+                            }
+                        }
+                    }
+                break;
+                case "register":
+                    //
+                    if (isset($data->userId)) {
+                        if (isset($this->userresources[$data->userId])) {
+                            if (!in_array($conn->resourceId, $this->userresources[$data->userId]))
+                            {
+                                $this->userresources[$data->userId][] = $conn->resourceId;
+                            }
+                        }else{
+                            $this->userresources[$data->userId] = [];
+                            $this->userresources[$data->userId][] = $conn->resourceId;
+                        }
+                    }
+                    $conn->send(json_encode($this->users));
+                    $conn->send(json_encode($this->userresources));
+                break;
+                default:
+                    $example = array(
+                        'methods' => [
+                                    "subscribe" => '{command: "subscribe", channel: "global"}',
+                                    "groupchat" => '{command: "groupchat", message: "hello glob", channel: "global"}',
+                                    "message" => '{command: "message", to: "1", message: "it needs xss protection"}',
+                                    "register" => '{command: "register", userId: 9}',
+                                ],
+                    );
+                    $conn->send(json_encode($example));
+                break;
             }
-        } else {
-            $conn->Chat->name  = 'Anonymous ' . $conn->resourceId;
         }
     }
 
-    /**
-     * {@inheritdoc}
-     */
-    public function onClose(ConnectionInterface $conn) {
-        foreach ($conn->Chat->rooms as $topic => $one) {
-            $this->onUnSubscribe($conn, $topic);
-        }
-    }
+    public function onClose(ConnectionInterface $conn)
+    {
+        $this->clients->detach($conn);
+        echo "Connection {$conn->resourceId} has disconnected\n";
+        unset($this->users[$conn->resourceId]);
+        unset($this->subscriptions[$conn->resourceId]);
 
-    /**
-     * {@inheritdoc}
-     */
-    function onCall(ConnectionInterface $conn, $id, $fn, array $params) {
-        switch ($fn) {
-            case 'setName':
-            break;
-
-            case 'createRoom':
-                $topic   = $this->escape($params[0]);
-                $created = false;
-
-                if (empty($topic)) {
-                    return $conn->callError($id, 'Room name can not be empty');
-                }
-
-                if (array_key_exists($topic, $this->roomLookup)) {
-                    $roomId = $this->roomLookup[$topic];
-                } else {
-                    $created = true;
-                    $roomId  = uniqid('room-');
-
-                    $this->broadcast(static::CTRL_ROOMS, array($roomId, $topic, 1));
-                }
-
-                if ($created) {
-                    $this->rooms[$roomId] = new \SplObjectStorage;
-                    $this->roomLookup[$topic] = $roomId;
-
-                    return $conn->callResult($id, array('id' => $roomId, 'display' => $topic));
-                } else {
-                    return $conn->callError($id, array('id' => $roomId, 'display' => $topic));
-                }
-            break;
-
-            default:
-                return $conn->callError($id, 'Unknown call');
-            break;
-        }
-    }
-
-    /**
-     * {@inheritdoc}
-     */
-    function onSubscribe(ConnectionInterface $conn, $topic) {
-        // Send all the rooms to the person who just subscribed to the room list
-        if (static::CTRL_ROOMS == $topic) {
-            foreach ($this->rooms as $room => $patrons) {
-                if (!$this->isControl($room)) {
-                    $conn->event(static::CTRL_ROOMS, array($room, array_search($room, $this->roomLookup), 1));
+        foreach ($this->userresources as &$userId) {
+            foreach ($userId as $key => $resourceId) {
+                if ($resourceId==$conn->resourceId) {
+                    unset( $userId[ $key ] );
                 }
             }
         }
-
-        // Room does not exist
-        if (!array_key_exists($topic, $this->rooms)) {
-            return;
-        }
-
-        // Notify everyone this guy has joined the room they're in
-        $this->broadcast($topic, array('joinRoom', $conn->WAMP->sessionId, $conn->Chat->name), $conn);
-
-        // List all the people already in the room to the person who just joined
-        foreach ($this->rooms[$topic] as $patron) {
-            $conn->event($topic, array('joinRoom', $patron->WAMP->sessionId, $patron->Chat->name));
-        }
-
-        $this->rooms[$topic]->attach($conn);
-
-        $conn->Chat->rooms[$topic] = 1;
     }
 
-    /**
-     * {@inheritdoc}
-     */
-    function onUnSubscribe(ConnectionInterface $conn, $topic) {
-        unset($conn->Chat->rooms[$topic]);
-        $this->rooms[$topic]->detach($conn);
-
-        if ($this->isControl($topic)) {
-            return;
-        }
-
-        if ($this->rooms[$topic]->count() == 0) {
-            unset($this->rooms[$topic], $this->roomLookup[array_search($topic, $this->roomLookup)]);
-            $this->broadcast(static::CTRL_ROOMS, array($topic, 0));
-        } else {
-            $this->broadcast($topic, array('leftRoom', $conn->WAMP->sessionId));
-        }
-    }
-
-    /**
-     * {@inheritdoc}
-     */
-    function onPublish(ConnectionInterface $conn, $topic, $event, array $exclude = array(), array $eligible = array()) {
-        $event = (string)$event;
-        if (empty($event)) {
-            return;
-        }
-
-        if (!array_key_exists($topic, $conn->Chat->rooms) || !array_key_exists($topic, $this->rooms) || $this->isControl($topic)) {
-            // error, can not publish to a room you're not subscribed to
-            // not sure how to handle error - WAMP spec doesn't specify
-            // for now, we're going to silently fail
-
-            return;
-        }
-
-        $event = $this->escape($event);
-
-        $this->broadcast($topic, array('message', $conn->WAMP->sessionId, $event, date('c')));
-    }
-
-    /**
-     * {@inheritdoc}
-     */
-    public function onError(ConnectionInterface $conn, \Exception $e) {
+    public function onError(ConnectionInterface $conn, \Exception $e)
+    {
+        echo "An error has occurred: {$e->getMessage()}\n";
         $conn->close();
-    }
-
-    protected function broadcast($topic, $msg, ConnectionInterface $exclude = null) {
-        foreach ($this->rooms[$topic] as $client) {
-            if ($client !== $exclude) {
-                $client->event($topic, $msg);
-            }
-        }
-    }
-
-    /**
-     * @param string
-     * @return boolean
-     */
-    protected function isControl($room) {
-        return (boolean)(substr($room, 0, strlen(static::CTRL_PREFIX)) == static::CTRL_PREFIX);
-    }
-
-    /**
-     * @param string
-     * @return string
-     */
-    protected function escape($string) {
-        return htmlspecialchars($string);
     }
 }

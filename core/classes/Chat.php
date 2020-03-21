@@ -41,6 +41,7 @@
                 $result['data']           = $chat;
                 $result['message']        = $messages;
                 $result['data']['chatId'] = $chatId;
+                $result['data']['meId']   = $userId;
                 // return messages
                 echo json_encode($result);  
             }
@@ -81,8 +82,9 @@
                 $result['date'][]    = $podcat['date'];
             }
 
-            $result['me'] = $userId == $chat['seller'] ? '1' : '0';
+            $result['me']             = $userId == $chat['seller'] ? '1' : '0';
             $result['data']['chatId'] = $chat['chatId'];
+            $result['data']['meId']   = $userId;
 
             // return messages
             echo json_encode($result);  
@@ -92,8 +94,6 @@
         public function sendMessage($chatId, $message, $sender) {
             $conn = parent::conn();
             $userId  = $_SESSION['userId'];//userId
-
-            
         }
 
         public function chatList($byId = false) {
