@@ -27,7 +27,8 @@
                 $result = array();
                 $result['data']['chatId'] = mysqli_insert_id($conn);
 
-                echo json_encode($result);
+                $chatId = $userId.mysqli_insert_id($conn).',';
+                $conn->query("UPDATE users SET chatId = '$chatId' WHERE userId = '$userId';");
 
                 // message is empty
                 return true;
@@ -41,20 +42,15 @@
                 $result['data']           = $chat;
                 $result['message']        = $messages;
                 $result['data']['chatId'] = $chatId;
-                $result['data']['meId']   = $userId;
-                // return messages
-                echo json_encode($result);  
+                $result['data']['meId']   = $userId; 
             }
-                
-                
 
-            // // name:id (voldemar:43)
-            // $sellerName = $goods['seller'];
-            // // id (43)
-            // $sellerId = substr($sellerName, strpos($sellerName, ':') + 1, strlen($sellerName));
-            
-            
-            // echo json_encode($goods);
+            $goodData = $conn->query("SELECT goodName, img FROM goods WHERE id = '$goodId'");
+            $goodData = $goodData->fetch_assoc();
+            $result['goodData'] = $goodData;
+
+            // return messages
+            echo json_encode($result); 
         }
 
         public function issetChat($chatId) {
@@ -82,18 +78,34 @@
                 $result['date'][]    = $podcat['date'];
             }
 
-            $result['me']             = $userId == $chat['seller'] ? '1' : '0';
-            $result['data']['chatId'] = $chat['chatId'];
-            $result['data']['meId']   = $userId;
+            $result['me']               = $userId == $chat['seller'] ? '1' : '0';
+            $result['data']['chatId']   = $chat['chatId'];
+            $result['data']['meId']     = $userId;
+            $result['data']['sellerId'] = $chat['seller'];
+            $result['data']['buyerId']  = $chat['buyer'];
+
+            $goodData = $chat['good'];
+            $goodData = $conn->query("SELECT goodName, img FROM goods WHERE id = '$goodData'");
+            $goodData = $goodData->fetch_assoc();
+            $result['goodData'] = $goodData;
 
             // return messages
             echo json_encode($result);  
 
         }
 
-        public function sendMessage($chatId, $message, $sender) {
+        public function getMyChats() {
             $conn = parent::conn();
-            $userId  = $_SESSION['userId'];//userId
+            $userId = $_SESSION['userId'];
+
+            $chats = $conn->query("SELECT chatId FROM users WHERE userId = '$userId'");
+            $chats = $chats->fetch_assoc();
+            
+            // my chats as a array
+            $myChats = explode(",", $chats['chatId']);
+            array_pop($myChats);
+            
+            echo json_encode($myChats);  
         }
 
         public function chatList($byId = false) {

@@ -125,6 +125,8 @@
                         $goods[$key] = "Товар удален:(";
                     }
                 }
+                $name = $conn->query("SELECT name, surname FROM users WHERE `userId` = '$id'");
+                $goods['myName'] = $name->fetch_assoc();
                 echo json_encode($goods);
             }else echo false;
         }

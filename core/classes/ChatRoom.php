@@ -139,7 +139,7 @@ class ChatRoom implements MessageComponentInterface
                                 $this->users[$resourceId]->send($msg);
                             }
                         }
-                        $conn->send(json_encode($this->userresources[$data->to]));
+                        // $conn->send(json_encode(екгу));
                     }
 
                     if (isset($this->userresources[$data->from])) {
@@ -163,8 +163,8 @@ class ChatRoom implements MessageComponentInterface
                             $this->userresources[$data->userId][] = $conn->resourceId;
                         }
                     }
-                    $conn->send(json_encode($this->users));
-                    $conn->send(json_encode($this->userresources));
+                    // $conn->send(json_encode($this->users));
+                    // $conn->send(json_encode($this->userresources));
                 break;
                 default:
                     $example = array(

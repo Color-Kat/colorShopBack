@@ -32,7 +32,6 @@
 
     if(isset($_GET['registration'])) $action = $_GET['registration'];
 
-    $conn   = new Connect();
     $render = new Render($action);
     $do     = new ToDo();
     $like   = new Like();
@@ -81,6 +80,14 @@
                 // echo session_id();   
             } catch (Exception $e) {
                 echo $e->getMessage();
+            }
+            break;
+        case 'getMyChats':
+            if (isset($_SESSION['authorization'])){
+                $chat = new Chat();
+                $chat->getMyChats();
+            }else{
+                echo 'login';
             }
             break;
         case 'logout':
@@ -200,15 +207,6 @@
                 $chat->issetChat($chatId);
             }else json_encode('login');
             break;
-        case 'sendMess':
-            $chatId  = $_POST['chatId'];
-            $sender  = $_POST['chatId'];
-            $message = $_POST['message'];
-
-            $chat = new Chat();
-            $chat->sendMessage($chatId, $message, $sender);
-            break;
-
         // CHAT ^^^^
         case 'chatList':
             if(!isset($_SESSION['authorization'])) {
