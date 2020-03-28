@@ -113,12 +113,34 @@
             $userId  = $_SESSION['userId'];//userId
 
             // my chats as a string
-            $chats = $conn->query("SELECT chatId FROM users WHERE userId = '$userId'");
-            $chats = $chats->fetch_assoc();
+            $myChats = $conn->query("SELECT chatId FROM users WHERE userId = '$userId'");
+            $myChats = $myChats->fetch_assoc();
 
             // my chats as a array
-            $myChats = explode(",", $chats['chatId']);
+            $myChats = explode(",", $myChats['chatId']);
+            array_pop($myChats);
+
+            $result = Array();
+            foreach ($myChats as $chatId) {
+                // get chatId
+                // userId->21 | 35<-chatId
+                $chatId = $this->str_replace_once($userId, '', $chatId);
+
+                // get chat data from db
+                $chats = $conn->query("SELECT chatId, good FROM chats WHERE chatId = '$chatId'");
+                $chats = $chats->fetch_assoc();
+
+                $goodId = $chats['good'];
+                $goodData = $conn->query("SELECT goodName, img FROM goods WHERE id = '$goodId'");
+                $goodData = $goodData->fetch_assoc();
+
+                $result[] = array_merge($chats, $goodData);
+            }
             
-            echo json_encode($myChats);  
+            echo json_encode($result);  
+        }
+
+        private function str_replace_once($search, $replace, $text){
+            return implode($replace, explode($search, $text, 2));
         }
     }

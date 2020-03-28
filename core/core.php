@@ -209,12 +209,21 @@
             break;
         // CHAT ^^^^
         case 'chatList':
-            if(!isset($_SESSION['authorization'])) {
-                echo json_encode('login');
-                return false;  
+            if (isset($_SESSION['authorization'])) {
+                $chat = new Chat();
+                $chat->chatList(); 
             }
-            $chat = new Chat();
-            $chat->chatList();
+            break;
+        case 'getMyId':
+            if (isset($_SESSION['authorization'])) { echo $_SESSION['userId']; }
+            break;
+        case 'savePushs':
+            $_SESSION['pushs'] = $_POST['pushs'];
+            break;
+        case 'getPushs':
+            if (isset($_SESSION['pushs'])) 
+                echo $_SESSION['pushs'];
+            else echo json_encode('empty');
             break;
 
         default: throw new \Exception('action not found');
