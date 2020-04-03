@@ -75,17 +75,27 @@
             $userId  = $_SESSION['userId'];//userId
 
             // my goods as a string
-            $goods   = $conn->query("SELECT cart FROM users WHERE userId = '$userId'");
-            $goods   = $goods->fetch_assoc();
+            $goods = $conn->query("SELECT myOrders FROM users WHERE userId = '$userId'");
+            $goods = $goods->fetch_assoc();
+            $goods = explode(",", $goods['myOrders']);
 
-            // my goods as a array
-            $myGoods = explode(",", $goods['cart']);
-            foreach($myGoods as $key => $item){
-                // find item item
-                if ($item == $id) return true;//found
+            // not my good
+            if (!in_array($id, $goods)){
+                // my goods as a string
+                $goods   = $conn->query("SELECT cart FROM users WHERE userId = '$userId'");
+                $goods   = $goods->fetch_assoc();
+
+                // my goods as a array
+                $myGoods = explode(",", $goods['cart']);
+                foreach($myGoods as $key => $item){
+                    // find item item
+                    if ($item == $id) return true;//found
+                }
+                // not found
+                return false;
             }
-            // not found
-            return false;
+            // this is my good
+            else return 'my';
         }
 
 

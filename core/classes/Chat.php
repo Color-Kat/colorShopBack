@@ -25,13 +25,20 @@
                                                                                     '$buyer');");
 
                 $result = array();
-                $result['data']['chatId'] = mysqli_insert_id($conn);
+                $result['data']['chatId']   = mysqli_insert_id($conn);
+                $result['data']['sellerId'] = $seller;
+                $result['data']['meId']     = $userId;
 
-                $chatId = $userId.mysqli_insert_id($conn).',';
-                $conn->query("UPDATE users SET chatId = '$chatId' WHERE userId = '$userId';");
+                $id = mysqli_insert_id($conn);
+                // add chatId (for me)
+                $chatId = $userId.$id.',';
+                $conn->query("UPDATE users SET chatId = CONCAT (chatId, '$chatId') WHERE userId = '$userId';");
+
+                // add chat (for seller)
+                $chatId_forSeller = $seller.$id.',';
+                $conn->query("UPDATE users SET chatId = CONCAT (chatId, '$chatId_forSeller') WHERE userId = '$seller';");
 
                 // message is empty
-                return true;
             }
             // chat exsist
             else{
@@ -39,10 +46,13 @@
                 $messages = $conn->query("SELECT * FROM chats_messages WHERE chat_id = '$chatId'");
                 $messages = $messages->fetch_assoc();
 
+                $messages['date'] = date('d H:i ', $messages['date']);
+
                 $result['data']           = $chat;
                 $result['message']        = $messages;
                 $result['data']['chatId'] = $chatId;
                 $result['data']['meId']   = $userId; 
+                $result['data']['sellerId'] = $seller;
             }
 
             $goodData = $conn->query("SELECT goodName, img FROM goods WHERE id = '$goodId'");
@@ -135,6 +145,7 @@
                 $goodData = $goodData->fetch_assoc();
 
                 $result[] = array_merge($chats, $goodData);
+                // $result = $chats;
             }
             
             echo json_encode($result);  
@@ -142,5 +153,55 @@
 
         private function str_replace_once($search, $replace, $text){
             return implode($replace, explode($search, $text, 2));
+        }
+
+        public function deleteChat($id) {
+            $conn = parent::conn();
+            $userId = $_SESSION['userId'];
+
+            $chat = $conn->query("SELECT seller, buyer FROM chats WHERE chatId = '$id'");
+            $chat = $chat->fetch_assoc();
+
+            if ($chat['seller'] == $userId) $interlocutor = $chat['buyer'];
+            else if ($chat['buyer'] == $userId) $interlocutor = $chat['seller'];
+            // -------------------------
+
+            // delete chat from me
+            $chatId = $userId.$id;
+
+            $myChats = $conn->query("SELECT chatId FROM users WHERE userId = '$userId'");
+            $myChats = $myChats->fetch_assoc();
+            
+            // my chats as a array
+            $myChats = explode(",", $myChats['chatId']);
+
+            if(($key = array_search($chatId, $myChats)) !== false)
+                unset($myChats[$key]);
+
+            $myChats = implode(',', $myChats);  
+            $conn->query("UPDATE users SET chatId = '$myChats' WHERE userId = '$userId';");
+            // --------------------------
+
+            // delete chat
+            $conn->query("DELETE FROM chats WHERE chatId = '$id';");
+            // --------------------------
+
+            // delete for interlocutor
+            $himChats = $conn->query("SELECT chatId FROM users WHERE userId = '$interlocutor'");
+            $himChats = $himChats->fetch_assoc();
+
+            // him chats as a array
+            $himChats = explode(",", $himChats['chatId']);
+
+            $chatId = $interlocutor.$id;
+
+            if(($key = array_search($chatId, $himChats)) !== false)
+                unset($himChats[$key]);
+
+            $himChats = implode(',', $himChats);
+
+            $conn->query("UPDATE users SET chatId = '$himChats' WHERE userId = '$interlocutor';");
+            
+            echo json_encode('delete');
         }
     }

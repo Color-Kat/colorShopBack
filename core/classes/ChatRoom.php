@@ -69,6 +69,9 @@ class ChatRoom implements MessageComponentInterface
                     }
                 break;
                 case "message":
+                    $time = date('d H:i ', time());
+                    $data->date = $time;
+                    $msg = json_encode($data);
                     if ( isset($this->userresources[$data->to]) ) {
                         foreach ($this->userresources[$data->to] as $key => $resourceId) {
                             if ( isset($this->users[$resourceId]) ) {
@@ -90,10 +93,12 @@ class ChatRoom implements MessageComponentInterface
                     $message= $data->message;
 
                     $conn = new Connect();
-                    $conn->conn()->query("INSERT INTO chats_messages (`chat_id`, `sender`, `message`) VALUES ('$chatId', 
-                                                                                                              '$sender', 
-                                                                                                              '$message');");
-
+                    $conn->conn()->query("INSERT INTO chats_messages (`chat_id`, `sender`, `message`, `checked`, `date`) 
+                                          VALUES ('$chatId', 
+                                                  '$sender', 
+                                                  '$message',
+                                                   0,
+                                                  '$time');");
                 break;
                 case "register":
                     //

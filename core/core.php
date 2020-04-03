@@ -86,9 +86,7 @@
             if (isset($_SESSION['authorization'])){
                 $chat = new Chat();
                 $chat->getMyChats();
-            }else{
-                echo 'login';
-            }
+            }return false;
             break;
         case 'logout':
             unset($_SESSION['userId']);
@@ -201,13 +199,18 @@
             break;
         case 'openChatById':
             $chatId = $_POST['chatId'];
-
             if (isset($_SESSION['authorization'])){
                 $chat = new Chat();
                 $chat->issetChat($chatId);
+            }else echo json_encode('login');
+            break;
+        case 'deleteChat':
+            $chatId = $_POST['chatId'];
+            if (isset($_SESSION['authorization'])){
+                $chat = new Chat();
+                $chat->deleteChat($chatId);
             }else json_encode('login');
             break;
-        // CHAT ^^^^
         case 'chatList':
             if (isset($_SESSION['authorization'])) {
                 $chat = new Chat();
