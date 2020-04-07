@@ -86,7 +86,7 @@
             if (isset($_SESSION['authorization'])){
                 $chat = new Chat();
                 $chat->getMyChats();
-            }return false;
+            }else echo json_encode('login');
             break;
         case 'logout':
             unset($_SESSION['userId']);
