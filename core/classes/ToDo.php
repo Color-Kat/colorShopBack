@@ -30,16 +30,22 @@
                     unlink($tmp_path . $fname);
 
                     $specList = array();
-                    foreach ($specs as $spec){
-                        $specList[] = $spec['name'].'---'.$spec['value'];
+                    if ($specs != false){
+                        foreach ($specs as $spec){
+                            $specList[] = $spec['name'].'---'.$spec['value'];
+                        }
+                        $specList = implode(",", $specList);
                     }
-                    $specList = implode(",", $specList);
 
-                    $conn->query("INSERT INTO goods (`goodName`, `descr`, `cost`, `img`, `seller`, `sellerAdress`, `sellerNumber`, `likes`, `categorie`, `specList`) VALUES ('$name', '$descr', '$cost', '$fileName', '$seller', '$location', '$number', 0, '$cat', '$specList')");
+                    if ($_POST['action'] == 'sell'){
+                        $conn->query("INSERT INTO goods (`goodName`, `descr`, `cost`, `img`, `seller`, `sellerAdress`, `sellerNumber`, `likes`, `categorie`, `specList`) VALUES ('$name', '$descr', '$cost', '$fileName', '$seller', '$location', '$number', 0, '$cat', '$specList')");
                     
-                    $goodId = $conn->insert_id;
-                    $userId = $_SESSION['userId'];
-                    $conn->query("UPDATE users SET myOrders = CONCAT(myOrders, ',$goodId') WHERE userId = '$userId'");
+                        $goodId = $conn->insert_id;
+                        $userId = $_SESSION['userId'];
+                        $conn->query("UPDATE users SET myOrders = CONCAT(myOrders, ',$goodId') WHERE userId = '$userId'");
+                    }else if ($_POST['action'] == 'updateSell'){
+                        $conn->query("UPDATE goods SET (`goodName`, `descr`, `cost`, `img`, `seller`, `sellerAdress`, `sellerNumber`, `likes`, `categorie`, `specList`) VALUES ('$name', '$descr', '$cost', '$fileName', '$seller', '$location', '$number', 0, '$cat', '$specList')");
+                    }
 
                     echo true;
                 }else echo 'size';

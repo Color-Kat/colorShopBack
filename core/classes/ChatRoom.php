@@ -88,17 +88,18 @@ class ChatRoom implements MessageComponentInterface
                         }
                     }
 
-                    $chatId = $this->str_replace_once($data->myId, '', $data->from);
-                    $sender = $data->sender;
-                    $message= $data->message;
+                    if ($data->message != 'raded') {
+                        $chatId = $this->str_replace_once($data->myId, '', $data->from);
+                        $sender = $data->sender;
+                        $message= $data->message;
 
-                    $conn = new Connect();
-                    $conn->conn()->query("INSERT INTO chats_messages (`chat_id`, `sender`, `message`, `checked`, `date`) 
-                                          VALUES ('$chatId', 
-                                                  '$sender', 
-                                                  '$message',
-                                                   0,
-                                                  '$time');");
+                        $conn = new Connect();
+                        $conn->conn()->query("INSERT INTO chats_messages (`chat_id`, `sender`, `message`, `date`) 
+                                            VALUES ('$chatId', 
+                                                    '$sender', 
+                                                    '$message',
+                                                    '$time');");
+                    }
                 break;
                 case "register":
                     //

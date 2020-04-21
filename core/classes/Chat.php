@@ -86,6 +86,7 @@
                 $result['messId'][]  = $podcat['messId'];
                 $result['sender'][]  = $podcat['sender'];
                 $result['date'][]    = $podcat['date'];
+                $result['status'][]  = $podcat['status'];
             }
 
             $result['me']               = $userId == $chat['seller'] ? '1' : '0';
@@ -204,5 +205,13 @@
             $conn->query("UPDATE users SET chatId = '$himChats' WHERE userId = '$interlocutor';");
             
             echo json_encode('delete');
+        }
+        public function readed($chatId, $sender) {
+            $conn = parent::conn();
+            $userId = $_SESSION['userId'];
+
+            $chatId = $this->str_replace_once($userId, '', $chatId);
+
+            $conn->query("UPDATE chats_messages SET status = 1 WHERE chat_id = '$chatId' AND status = 0 AND sender = '$sender';");
         }
     }

@@ -27,7 +27,7 @@
             if ( $sellerId ) 
             {
                 // user data
-                $sellerInfo = $conn->query("SELECT * FROM users WHERE userId = '$sellerId'");
+                $sellerInfo = $conn->query("SELECT 'name', 'surname', 'userId'  FROM users WHERE userId = '$sellerId'");
                 $sellerInfo = $sellerInfo->fetch_assoc();
                 
                 // mass['userIs] -> mass['sellerId]

@@ -18,6 +18,7 @@
     use ColorCore\Chat;
     use ColorCore\Login;
     use ColorCore\Registration;
+    use ColorCore\gEditor;
 
     // auto load classes
     // spl_autoload_register(function ($class) {
@@ -107,11 +108,12 @@
             $descr    = $_POST['descr'];
             $cost     = $_POST['cost'];
             $cat      = $_POST['categorie'];
-            $lacation = $_POST['location'];
+            $location = $_POST['location'];
             $number   = $_POST['number'];
-            $specs    = $_POST['specs'];
-            
-            $do->doSell($_FILES, $name, $descr, $cost, $cat, $lacation, $number, $specs);
+            if(isset($_POST['specs'])) $specs = $_POST['specs'];
+            else $specs = false;
+
+            $do->doSell($_FILES, $name, $descr, $cost, $cat, $location, $number, $specs);
             break;
         case 'search':
             unset($_SESSION['search']);
@@ -222,14 +224,40 @@
             break;
         case 'savePushs':
             $_SESSION['pushs'] = $_POST['pushs'];
+
+            if ( isset($_POST['id']) ){
+                $chat = new Chat();
+                $chat->readed($_POST['id'], $_POST['sender']);
+            }
             break;
         case 'getPushs':
             if (isset($_SESSION['pushs'])) 
                 echo $_SESSION['pushs'];
             else echo json_encode('empty');
             break;
-
-        default: throw new \Exception('action not found');
+        case 'deleteMyGood':
+            if (isset($_SESSION['authorization'])){
+                $goodEditor = new gEditor();
+                $goodEditor->gDelete($_POST['id']);
+            }
+            break;
+        case 'editMyGood':
+            if (isset($_SESSION['authorization'])){
+                $goodEditor = new gEditor();
+                $goodEditor->gEdit($_POST['id']);
+            }
+            break; 
+        case 'updateSell':
+            $gEditor = new gEditor();
+            $gEditor->gUpdate($do);
+            break;
+        case 'soldGood':
+            if (isset($_SESSION['authorization'])){
+                $goodEditor = new gEditor();
+                $goodEditor->gDelete($_POST['id']);
+                $goodEditor->gSales($_POST['id']);
+            }
+            break;
     } 
 
     function cors() { 	
