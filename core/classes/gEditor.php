@@ -50,14 +50,20 @@
             $cat      = $_POST['categorie'];
             $location = $_POST['location'];
             $number   = $_POST['number'];
-            $specs    = $_POST['specs'];
             $id       = $_POST['id'];
+            // try {} catch (Exception $e) {}
+            
+            
+            if(isset($_POST['specs']))$specs=$_POST['specs'];
+            else $specs=false;
 
             // array to string
-            foreach ($specs as $spec){
-                $specList[] = $spec['name'].'---'.$spec['value'];
-            }
-            $specList = implode(",", $specList);
+            if($specs){
+                foreach ($specs as $spec){
+                    $specList[] = $spec['name'].'---'.$spec['value'];
+                }
+                $specList = implode(",", $specList);
+            }else $specList='';
             
             if (!$_FILES['file']['name']) {
                 
@@ -66,7 +72,7 @@
 
                 echo true;
             }else{
-                $do->doSell($_FILES, $name, $descr, $cost, $cat, $location, $number, $specs);
+                $do->doSell($_FILES, $name, $descr, $cost, $cat, $location, $number, $specs, $id);
             }
         }
 
@@ -74,7 +80,7 @@
             $conn = parent::conn();//db connection
             $userId = $_SESSION['userId'];
             
-            $conn->query("UPDATE users SET reputation = reputation + 1 WHERE userId = '$userId'");
+            $conn->query("UPDATE users SET reputation = reputation + 10 WHERE userId = '$userId'");
             echo json_encode(true);
         }
     }

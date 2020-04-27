@@ -27,10 +27,10 @@
             if ( $sellerId ) 
             {
                 // user data
-                $sellerInfo = $conn->query("SELECT 'name', 'surname', 'userId'  FROM users WHERE userId = '$sellerId'");
+                $sellerInfo = $conn->query("SELECT `name`, `surname`, `userId`,`reputation`  FROM users WHERE userId = '$sellerId'");
                 $sellerInfo = $sellerInfo->fetch_assoc();
                 
-                // mass['userIs] -> mass['sellerId]
+                // mass['userIs'] -> mass['sellerId']
                 $sellerInfo['sellerId'] = $sellerInfo['userId'];
                 unset($sellerInfo['userId']);
 

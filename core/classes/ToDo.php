@@ -5,8 +5,9 @@
         // получить соединение с бд
         protected $conn;
 
-        public function doSell ($file, $name, $descr, $cost, $cat, $location, $number, $specs) {
+        public function doSell ($file, $name, $descr, $cost, $cat, $location, $number, $specs, $id=false) {
             $conn = parent::conn();
+            $userId  = $_SESSION['userId'];
 
             $tmp_path = 'tmp/';
             $file_name = $file['file']['name'];
@@ -29,25 +30,31 @@
                     
                     unlink($tmp_path . $fname);
 
-                    $specList = array();
-                    if ($specs != false){
+                   
+                    if ($specs!=false){
+                        $specList = array();
                         foreach ($specs as $spec){
                             $specList[] = $spec['name'].'---'.$spec['value'];
                         }
                         $specList = implode(",", $specList);
-                    }
+                    }else $specList='';
 
+                    $sellerRep = $conn->query("SELECT `reputation`  FROM users WHERE userId = '$userId'");
+                    $sellerRep = $sellerRep->fetch_assoc();
+                    $sellerRep = $sellerRep['reputation'];
                     if ($_POST['action'] == 'sell'){
-                        $conn->query("INSERT INTO goods (`goodName`, `descr`, `cost`, `img`, `seller`, `sellerAdress`, `sellerNumber`, `likes`, `categorie`, `specList`) VALUES ('$name', '$descr', '$cost', '$fileName', '$seller', '$location', '$number', 0, '$cat', '$specList')");
-                    
+                        $res = $conn->query("INSERT INTO goods (`goodName`, `descr`, `cost`, `img`, `seller`, `sellerAdress`, `sellerNumber`, `categorie`, `specList`, `reputation`) VALUES ('$name', '$descr', '$cost', '$fileName', '$seller', '$location', '$number', '$cat', '$specList', '$sellerRep')");
+                        
+                        if(!$res) echo 'mySql error: '.$conn->errno;
+
                         $goodId = $conn->insert_id;
                         $userId = $_SESSION['userId'];
                         $conn->query("UPDATE users SET myOrders = CONCAT(myOrders, ',$goodId') WHERE userId = '$userId'");
                     }else if ($_POST['action'] == 'updateSell'){
-                        $conn->query("UPDATE goods SET (`goodName`, `descr`, `cost`, `img`, `seller`, `sellerAdress`, `sellerNumber`, `likes`, `categorie`, `specList`) VALUES ('$name', '$descr', '$cost', '$fileName', '$seller', '$location', '$number', 0, '$cat', '$specList')");
+                        $conn->query("UPDATE `goods` SET `goodName`= '$name',`descr`='$descr',`cost`='$cost',`img`='$fileName',`seller`='$seller',`sellerAdress`='$location',`sellerNumber`='$number',`categorie`='$cat',`specList`='$specList', `reputation`='$sellerRep' WHERE id = '$id'");
                     }
 
-                    echo true;
+                    // echo true;
                 }else echo 'size';
             }else echo 'type';
         }
@@ -107,6 +114,15 @@
                 
                 return $file['name'];
             }
+        }
+
+        
+        public function reputation () {
+            $conn = parent::conn();
+            $userId = $_SESSION['userId'];
+            $sel = $conn->query("SELECT reputation FROM users WHERE userId = '$userId'");
+            $sel = $sel->fetch_assoc();
+            echo json_encode($sel['reputation']);
         }
     }
 ?>

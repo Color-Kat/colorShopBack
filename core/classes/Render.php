@@ -35,9 +35,9 @@
             }else $myLikes[] = '0';
 
             //search without anything 
-            if(!isset($_SESSION['search']) && !isset($_SESSION['cat'])){
+            if(!isset($_SESSION['search']) && !isset($_SESSION['cat']) && !isset($_SESSION['sorting'])){
 
-                $sel = $conn->query("SELECT * FROM goods LIMIT $start, 12");
+                $sel = $conn->query("SELECT * FROM goods ORDER BY `id` DESC LIMIT $start, 12");
                 if($sel->num_rows > 0){
                     $out = array();
 
@@ -71,6 +71,64 @@
 
                     echo json_encode($out);
                 }else echo '0';
+            }
+
+            // have a sorting parametrs
+            else if(isset($_SESSION['sorting'])) {
+                $sort = $_SESSION['sorting'];
+
+                switch ($sort) {
+                    case 'price_plus':
+                        # sort by ascending price
+                        $sel = $conn->query("SELECT * FROM goods ORDER BY `cost` LIMIT $start, 12");
+                        break;
+                    case 'price_minus':
+                        $sel = $conn->query("SELECT * FROM goods ORDER BY `cost` DESC LIMIT $start, 12");
+                        break;
+                    case 'popularity':
+                        $sel = $conn->query("SELECT * FROM goods ORDER BY `likes` DESC LIMIT $start, 12");
+                        break;
+                    case 'date':
+                        $sel = $conn->query("SELECT * FROM goods ORDER BY `id` DESC LIMIT $start, 12");
+                        break;
+                    case 'rating':
+                        # code...
+                        $sel = $conn->query("SELECT * FROM goods ORDER BY `reputation` DESC LIMIT $start, 12");
+                        break;  
+                    
+                    default:
+                        echo 'incorrect value';
+                        break;
+                }
+                if($sel->num_rows > 0){
+                    $out = array();
+
+                    // LIKES
+                    while($row = $sel->fetch_assoc()){
+                        if(in_array($row['id'], $myLikes))
+                            $row['iLike'] = true;
+                        else 
+                            $row['iLike'] = false;
+                        $out[] = $row;
+                    }
+
+                    echo json_encode($out);
+                }else echo '0';
+                // $sel = $conn->query("SELECT * FROM goods WHERE categorie = '$searchCat' LIMIT $start, 12");
+                // if($sel->num_rows > 0){
+                //     $out = array();
+
+                //     // LIKES
+                //     while($row = $sel->fetch_assoc()){
+                //         if(in_array($row['id'], $myLikes))
+                //             $row['iLike'] = true;
+                //         else 
+                //             $row['iLike'] = false;
+                //         $out[] = $row;
+                //     }
+
+                //     echo json_encode($out);
+                // }else echo '0';
             }
 
             // have a search

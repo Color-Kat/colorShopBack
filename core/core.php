@@ -76,7 +76,6 @@
             $doLogin    = new Login($emailLogin, $passLogin);
             try {
                 $doLogin->login();
-                var_dump($_SESSION);
                 // Если true
                 // echo session_id();   
             } catch (Exception $e) {
@@ -117,6 +116,7 @@
             break;
         case 'search':
             unset($_SESSION['search']);
+            unset($_SESSION['sorting']);
             unset($_SESSION['cat']);
             
             $query = $_POST['query'];
@@ -124,10 +124,21 @@
             
             echo true;
             break;
+        case 'sorting':
+            unset($_SESSION['search']);
+            unset($_SESSION['cat']);
+            unset($_SESSION['sorting']);
+            
+            $query = $_POST['query'];
+            $_SESSION['sorting'] = $query;
+            
+            echo true;
+            break;
         case 'deleteSessionSearch':
             unset($_SESSION['search']);
             unset($_SESSION['cat']);
-            echo 'udal';
+            unset($_SESSION['sorting']);
+            // echo 'deleted';
             break;
         case 'addLike':
             if(isset($_SESSION['authorization'])){
@@ -257,6 +268,10 @@
                 $goodEditor->gDelete($_POST['id']);
                 $goodEditor->gSales($_POST['id']);
             }
+            break;
+        case 'reputation':
+            if (isset($_SESSION['authorization']))
+                $do->reputation();
             break;
     } 
 

@@ -145,8 +145,9 @@
                 $goodData = $conn->query("SELECT goodName, img FROM goods WHERE id = '$goodId'");
                 $goodData = $goodData->fetch_assoc();
 
-                if ($chats) 
+                if ($chats && $goodData) 
                     $result[] = array_merge($chats, $goodData);
+            
                 // $result = $chats;
             }
             
